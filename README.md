@@ -15,16 +15,11 @@ The project is organized into several key sections:
 1. **Introduction**: An explanation of the background and context of the study, including the significance of the research and the data used.
 2. **Theoretical Basis of SLR**: Explanation of the simple linear regression model and its assumptions.
 3. **Data Analysis**: Detailed application of SLR to the dataset, including model fitting and visualization.
-4. **Model Validation**: Validation of the model using various diagnostic checks, including residual analysis and hypothesis testing.
-5. **Conclusion**: Summary of findings and recommendations.
-
-## Steps Involved
-1. **Data Import**: The data is imported into R for analysis.
-2. **Preliminary Data Exploration**: Scatter plots and correlation calculations to explore potential relationships between the variables.
-3. **Model Fitting**: Using the method of least squares to fit the linear regression model.
-4. **Model Validation**: Assessing the validity of the model through residual analysis and checks for errors and assumptions.
-5. **Statistical Tests**: Performing hypothesis testing, calculating confidence intervals, and checking for multicollinearity and other potential biases.
-6. **Results Interpretation**: Interpreting the results from the statistical analysis and making conclusions based on the findings.
+   1. *Preliminary Exploration*: Scatter plots and correlation calculations.
+   2. *Model Fitting*: Method of Least Squares to fit the SLR model.
+   3. *Model Validation*: Residual analysis and checks for errors/assumptions.
+   4. *Statistical Tests*: Hypothesis tests, confidence interals, and other potential biases.
+4. **Conclusion**: Summary of findings and recommendations.
 
 ## Key Findings
 - A strong positive correlation was found between fire damage and distance from the fire station, with a correlation coefficient of **0.96**.
