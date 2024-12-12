@@ -1,0 +1,444 @@
+---
+title: "MATH 4753 Project: Analysis of Statistical Dependency of Distance from Fire Station on Fire Damage"
+author: "Alicia Maranville"
+date:  "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  slidy_presentation:
+    fig_height: 6
+    fig_width: 7
+    toc: yes
+    toc_float: yes
+  html_document:
+    code_folding: show
+    csl: biomed-central.csl
+    df_print: paged
+    fig_caption: yes
+    fig_height: 6
+    fig_width: 7
+    number_sections: yes
+    theme: journal
+    toc: yes
+    toc_float: yes
+bibliography: project.bib
+abstract: This project is all about applications of SLR to real data using R. Utilizing a dataset containing information about fire damage taken from Section 10.10 in William M. Mendenhall & Terry L. Sincich’s textbook, Statistics for Engineering and the Sciences, 6th (2016), I will be leveraging my statistical knowledge accumulated over the course of this semester to perform an analysis of the data using R. Specfically, I am to apply Simple Linear Regression to examine the relationship between the distance of a fire from the fire station and the corresponding damage in thousands of dollars. As a result, I will determine if there is a linear dependence of fire damage on the distance.
+---
+
+<center>
+
+![Alicia Maranville](logo.png "My Picture"){width="20%"}
+
+</center>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(leaflet)
+library(dplyr)
+```
+
+# Introduction
+
+Although terrifying and deadly in some cases, the possibility of a residential building/home catching fire is extremely common. In 2022, there were 374,300 fires contributing to \$10.8 billion in dollar loss: an average of \~\$28,910 lost per fire (@USFA). Due to the frequency of residential fires, understanding the factors that contribute to extreme damage of homes could assist in finding ways to decrease the average dollars lost per fire.
+
+Residential fires impact multiple stakeholders including homeowners, firefighters, and fire insurance companies. Since fire insurance covers damage to your house and belongings as a result of fire, the evaluation of what causes an increase of fire damage in the event of a fire is important for insurance companies to conduct (@bishop). One potential factor influencing fire damage severity is the distance between a residence and the nearest fire station. Intuitively, homes located farther from fire stations may experience greater damage due to longer response times, while those closer to fire stations may benefit from faster interventions. Leveraging statistics to quantify this relationship is significant for fire insurance companies to minimize risk and, possibly, influence future community safety measures.
+
+<center>
+
+![[Firefighters per Homes](https://www.valuepenguin.com/access-to-fire-stations#service) (Hurst 2021)](firefighters.png){width="50%"}
+
+</center>
+
+Despite the intuitive idea that closer distance to a fire station implies less damage due to quick response time, this may not be the case. In heavily populated urban areas and diffusely population rural areas, there exists an average of 3.2 and 0.38 fire stations for every 100 square miles respectively (@hurst). Additionally, in urban and rural countires, the average number of firefighters per 10,000 homes is 18.1 and 55.7 respectively (@hurst). Residents of rural counties have access to more firefighters than urban residents. In the event of a fire that impacts many homes at once, those living in rural areas are more likely to have people available immediately to respond. Thus, we cannot jump to concluding that distance and damage are strongly correlated, which is why using statistical theory concepts to gauge the correlation between them is vital.
+
+---
+
+## My Interest in the Data
+
+Personally, my passion for exploring data to help others fuels my interest in this problem. The process of analyzing data through theoretical and visual methods intrigues me, especially when combined with the ability to generate insights to help others. I wish to assist in solving the problem of extreme loss due to residential fires. With this data set, the analysis of statistical dependency of fire damage on fire station distance could help in ensuring data-driven decision making in city planning. Eventually, this could lead to decreasing the average dollar loss per residential fire which positively impact society as a whole.
+
+---
+
+## The Data
+
+A study was conducted in a large suburb of a major city, where a sample of 15 fires were selected. The amount of damage $y$ in thousands of dollars and the distance $x$ in miles between the fire and the nearest fire station were recorded for each entry. The study was conducted for insurance companies to relate the amount of fire damage in residential fires to the distance to the nearest fire station (@mendenhall)
+
+<center>
+
+![[Dwellers Connected to Cities](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0166083) (Nelson 2016)](suburbs.png){width="50%"}
+
+</center>
+
+---
+
+## Variables
+
+```{r}
+data <- read.csv("FIREDAM.csv")
+
+library(DT)
+datatable(
+  data,filter = 'top', options = list(
+  pageLength = 5, autoWidth = TRUE, editable = TRUE, dom = 'Bfrtip',
+    buttons = c('copy', 'csv', 'excel', 'pdf', 'print')),
+caption = htmltools::tags$caption(
+    style = 'caption-side: bottom; text-align: center;',
+    'Table 1: ', htmltools::em('Fire Damage Data Set.')
+  )
+)
+```
+
+As seen in the table, the two variables of the data set are distance and damage. In this sample, distance is a continuous variable measured in miles and damage is a continuous random variance measured in thousands of dollars.
+
+---
+
+## Preliminary Plots/Interpretation
+
+```{r}
+library(s20x)
+pairs20x(data)
+
+library(ggplot2)
+g = ggplot(data, aes(x = DISTANCE, y = DAMAGE)) + geom_point()
+g = g + geom_smooth(method = "loess")
+g
+```
+
+These preliminary plots serve to examine what relationship appears to be present between the data. In the first output, we see the calculated correlation coefficient between Damage and Distance to be 0.96, and in the second output, we see a generally linear correlation between the variances. Although it appears to be somewhat uniform and linear, the following statistical analysis will determine the degree to which this is true, which will determine the extent of the actual relationship.
+
+# Theoretical Basis of SLR (@mendenhall)
+
+A Simple Linear Regression (SLR) model is used to estimate the relationship between two variances. This lies in the assumption that the relationship between two variables can be described by a straight line.
+
+This model is expressed by:
+
+$y=\beta_0+\beta_1x+\epsilon$
+
+where
+
+-   $y$ = Dependent Variable
+
+-   $x$ = Independent Variable
+
+-   $E(y) = \beta_0+\beta_1x$ is the deterministic component
+
+-   $\epsilon$ = Random error component
+
+-   $\beta_0$ = Y-intercept of the line
+
+-   $\beta_1$ = Slope of the line
+
+---
+
+## Assumptions
+
+There are multiple assumptions that must be met by the probability distribution of the data in order to apply SLR.
+
+1.  The mean of the probability distribution of $\epsilon$ is 0.
+
+2.  The variance of the probability distribution of $\epsilon$ is constant for all x.
+
+3.  The probability distribution of $\epsilon$ is normal.
+
+4.  The errors associated with any two different observations are independent.
+
+---
+
+## Estimation
+
+We use the method of least-squares to estimate values of $\beta_0$ and $\beta_1$, denoted as $\hat{\beta_0}$ and $\hat{\beta_1}$. 
+
+The least-squares line (the estimation) is one that has a smaller sum of squared error (SSE) than any other model, where
+
+$SSE = \sum^n_{i=1}[y_i-(\hat{\beta_0}+\hat{\beta_1x_i})]^2$
+
+---
+
+## Significance
+
+We evaluate the statistical significance of the SLR in a variety of ways, including:
+
+- $r$/Coefficient of Correlation: Measure of strength of the linear relationship between x and y.
+
+$r=\frac{SS_{xy}}{\sqrt{SS_{xx}SS_{yy}}}$
+
+- $R^2$/Coefficient of Determination: Proportion of the sum of squares of deviations of the y values about their predicted values.
+
+$R^2 = 1 - \frac{SSE}{SS_{yy}}$
+
+- Sum of Squares Identity: $TSS = MSS + RSS$
+
+$\sum^n_{i=1}(y_i-\bar{y_i})^2 = \sum^n_{i=1}(\hat{y_i}-\bar{y_i})^2 + \sum^n_{i=1}(y_i-\hat{y_i})^2$
+
+- Hypothesis Tests: F statistic, Confidence Interval, and P-value
+
+# Data Analysis
+
+## Estimates with Method of Least-Squares
+
+```{r}
+fire.lm = lm(DAMAGE~DISTANCE,data=data)
+summary(fire.lm)
+```
+The summary gives us the values $\hat{\beta_0} = 10.2779$ and $\hat{\beta_1}=4.9193$.
+
+$y=\beta_0+\beta_1x_i = 10.2779 + 4.9193x_i$ is the straight line derived from the method of least squares. The slope ($\hat{\beta_1}$) tells us that the estimated fire damage increases by $4,919.30 for each mile away the fire station is from the fire.
+
+---
+
+## Checks on Validity
+
+### Scatter Plot
+
+```{r}
+plot(DAMAGE~DISTANCE,bg="Red",pch=21,cex=1.2,ylim=c(0,1.1*max(DAMAGE)),xlim=c(0,1.1*max(DISTANCE)),data=data,main="Scatter Plot and Fitted Line")
+abline(fire.lm)
+```
+
+The graph plots the straight line we found previously along with the data points, so we can visualize how the SLR line relates to the data points. The line appears to be a good fit, but is it the **best** fit?
+
+---
+
+### Residuals
+
+Residual line segments are the deviations of the actual data point from the fitted line. By plotting all of the residuals, we can visualize how the points vary from the line we have calculated.
+
+```{r}
+plot(DAMAGE~DISTANCE,bg="Red",pch=21,cex=1.2,
+              ylim=c(0,1.1*max(DAMAGE)),xlim=c(0,1.1*max(DISTANCE)),
+              main="Residual Line Segments", data=data)
+ht.lm=with(data, lm(DAMAGE~DISTANCE))
+abline(ht.lm)
+yhat=with(data,predict(ht.lm,data.frame(DISTANCE)))
+with(data,{segments(DISTANCE,DAMAGE,DISTANCE,yhat)})
+abline(ht.lm)
+```
+
+---
+
+### Means
+
+By plotting the means of damage done and distance along with the fitted line and deviations from the fitted line, we will be able to visualize the difference between the means of the damage data and distance data.
+
+```{r}
+plot(DAMAGE~DISTANCE,bg="Red",pch=21,cex=1.2,
+              ylim=c(0,1.1*max(DAMAGE)),xlim=c(0,1.1*max(DISTANCE)),
+              main="Mean", data=data)
+abline(fire.lm)
+with(data, abline(h=mean(DAMAGE)))
+abline(fire.lm)
+with(data,segments(DISTANCE,mean(DAMAGE),DISTANCE,yhat, col="Blue"))
+```
+
+---
+
+### Means with Total Deviation
+
+By plotting the total deviation from the mean, we can visualize the points making up the total sum of squares.
+
+```{r}
+plot(DAMAGE~DISTANCE,bg="Red",pch=21,cex=1.2,
+              ylim=c(0,1.1*max(DAMAGE)),xlim=c(0,1.1*max(DISTANCE)),
+              main="Total Deviation", data=data)
+with(data, abline(h=mean(DAMAGE)))
+with(data,segments(DISTANCE,DAMAGE,DISTANCE,mean(DAMAGE), col="Green"))
+```
+
+---
+
+### Sum of Squares Identity
+
+We want to verify that $TSS = MSS + RSS$.
+
+$TSS = \sum^n_{i=1}(y_i-\bar{y_i})^2$. We can use the total deviation from the mean to calculate this.
+
+```{r}
+TSS=with(data,sum((DAMAGE-mean(DAMAGE))^2))
+TSS
+```
+
+
+$MSS + RSS = \sum^n_{i=1}(\hat{y_i}-\bar{y_i})^2 + \sum^n_{i=1}(y_i-\hat{y_i})^2$. For MSS, we use the means, and for RSS, we use the residuals.
+
+```{r}
+MSS=with(data,sum((yhat-mean(DAMAGE))^2))
+RSS=with(data,sum((DAMAGE-yhat)^2))
+MSS
+RSS
+MSS+RSS
+```
+
+Since $TSS=911.5173=RSS+MSS$, the sum of squares identity is verified. This identity helps us to identify the coefficient of determination ($R^2$) which is equal to $MSS/TSS$
+
+```{r}
+MSS/TSS
+```
+
+By definition, the closer $R^2$ is to 1, the better the fit of the trend line. Since $MSS/TSS = 0.923$, the trend line is a significantly correct fit for the data set.
+
+# SLR Assumptions
+
+## Error Distribution
+
+Now, we will check if the distribution of the errors is equal to 0. This is one of the assumptions that must be met for SLR.
+
+```{r}
+library(s20x)
+trendscatter(DAMAGE~DISTANCE, f = 0.5, data = data, main="Distance Vs. Damage")
+```
+
+Since the red lines, which depict the error of where the best fit line could fit, are reasonably narrow and linear, we observe that the plot is generally linear.
+
+We want to plot the residuals of the data vs. the fitted values.
+
+```{r}
+ht.lm = with(data, lm(DAMAGE~DISTANCE))
+height.res = residuals(ht.lm) # find residuals
+height.fit = fitted(ht.lm)    # find fitted values
+
+plot(data$DISTANCE,height.res, xlab="DISTANCE",ylab="Residuals",ylim=c(-1.5*max(height.res),1.5*max(height.res)),xlim=c(0,1.1*max(data$DISTANCE)), main="Residuals vs Distance")
+
+trendscatter(height.res~height.fit, f = 0.5, data = ht.lm, xlab="Fitted Values",ylab="Residuals",ylim=c(-1.1*max(height.res),1.1*max(height.res)),xlim=c(min(height.fit),max(height.fit)), main="Residuals vs Fitted Values")
+
+```
+
+From the first graph, it appears the residuals are roughly symmetrical about the zero on the y-axis, meaning there is no crazy deviation from the best fit line.
+
+On the second graph, we don't see a trend in the graph which indicates that the linear model is the best model for the data set.
+
+---
+
+
+### Shapiro-Wilk Test
+
+Let's check for normality of the error distribution using the Shapiro-Wilk test.
+
+```{r}
+normcheck(ht.lm, shapiro.wilk = TRUE)
+```
+
+In this case, $H_0: \epsilon$ ~ $N(0,\sigma^2)$. Since p = 0.474 > 0.05, we accept the null hypothesis and conclude the error distribution is normal.
+
+Since we concluded the error distribution is normal with mean 0 and variance $\sigma^2$, the assumptions that error distribution mean is 0 and error distribution variance is constant are both met.
+
+---
+
+## Independence of data
+
+Since the responses are independent of each other (one fire not impacting the next fire), we can assume that the errors are independent.
+
+## Conclusion
+
+All of the assumptions of SLR are addressed.
+
+# LM Object/Tests
+
+```{r}
+summary(fire.lm)
+```
+## t-test
+
+Using the t-test on the slope coefficient helps to make conclusions about the relationship between distance and damage.
+
+The t-value for $\beta_1$ is 12.525 and the p-value is $1.25e-08$ from the coefficients section of the summary. These values are based on a test of the null hypothesis $H_0: \beta_1=0$. Since p = 1.25e-08 < 0.05, we reject the null hypothesis, meaning there must be some correlation between the distance and damage.
+
+---
+
+## F-test
+
+Using the F-test on the model ensures the regression model is a better fit than the absence of any model. 
+
+From the summary, we see the F-statistic is 156.9 and p-value is 1.248e-08 from the last row. Since the p-value is less than 0.05, we conclude that the regression model is significant.
+
+---
+
+## Residuals
+
+The residuals section of the summary describes the distribution of the errors. The minimum is -3.46, median is -1.1311, and maximum is 3.3915, displaying a seemingly symmetric distribution around 0.
+
+## Coefficients
+
+The coefficients section of the summary gives the coefficients for the SLR equation along with its statistical signifiance.
+
+- Intercept estimate is 10.2779 with a p < 0.0001, indicating statistical significance.
+
+- Slope estimate is 4.9193 with a p < 0.001, indicating that Distance is a significant predictor of Damage.
+
+---
+
+## Residual Standard Error
+
+The RSE gives the average deviation of observed Damage values from the regression line. The smaller the RSE, the better the model fits. In our summary, RSE = 2.316, which indicates good accuracy.
+
+## R-squared
+
+- Multiple $R^2$ = 0.9235, which means that 92.35% of variability Damage is explained by Distance.
+
+- Adjusted $R^2$ = 0.9176, which is slightly lower but still very high.
+
+## Conclusion
+
+Because of the high $R^2$, statistically significant coefficients, small RSE, and significant F-test, the SLR suggests a strong linear relationship between Distance and Damage.
+
+# CIs for $\beta$ parameter estimates
+
+## Use of `predict()`
+
+```{r}
+damage = predict(fire.lm, data.frame(DISTANCE=c(3,4,5)))
+damage
+```
+
+
+## Use of `ciReg()`
+
+```{r}
+ciReg(fire.lm, conf.level=0.95, print.out=TRUE)
+```
+
+We are 95% confidence the y-intercept is between 7.209 and 13.34 and that the Distance slope is between 4.07085 and 5.76791. 
+
+Since the CI for the slope does not contain zero, we can conclude that Distance does preidct Damage. 
+
+# Avoiding Bias with Cook's
+
+It is important to avoid biases in the data analysis caused by outliers skewing the data. Therefore, we can use Cook’s distance to examine outliers and their contribution to the data set. Outliers may distort the accuracy of a regression, so Cook’s distance calculates the effect of removing any given data point – it estimates the overall influence of the point on the least-squares regression analysis being done. If a point has a large Cook’s distance, it is considered to need a closer examination in order to determine whether the data is valid. Cook’s distance can also be used to determine which, if any, of the areas within the data set require additional data points to be gathered and included (@wiki).
+
+```{r}
+cooks20x(fire.lm)
+```
+
+Cook's Distance for this linear model and data tells me that observation numbers 9, 11, 13 have large enough values (≥ 0.10) that they are considered significant and need closer examination.
+
+I can make a new model, made from the same linear model, using the same data, but removing the datum with the highest Cooks distance (13) removed:
+
+```{r}
+fire2.lm=lm(DAMAGE~DISTANCE, data=data[-13,])
+summary(fire2.lm)
+```
+
+Comparing this new model with the first model:
+
+```{r}
+summary(fire.lm)
+```
+
+Interestingly, the R-squared values decrease when removing the datum with the highest Cook's distance (signaling smaller proportion of Distance determining Damage), but the residual standard error decreases (indicates better fit). By removing the outlier, we have likely created a model that is more telling of the underlying data.
+
+# Conclusion
+
+## Research Question
+
+Regarding the linear dependence of fire damage on the distance, we can conclude that there is a dependency of fire damage in $ on the distance a house is from the nearest fire station. 
+
+Based on the statistical analysis performed, the data strongly supports the existence of a linear relationship between fire damage and the distance from the nearest fire station. The simple linear regression (SLR) model demonstrates this relationship with high accuracy and satisfies the key assumptions required for linear regression. This finding is significant because it enables the prediction of fire damage based on the proximity of a residence to a fire station, providing valuable insights for fire insurance companies and urban planners.
+
+---
+
+## Suggestions
+
+The analysis identified outliers through Cook's distance, which can disproportionately affect the model. Removing additional outliers flagged by diagnostic tools could further refine the model's accuracy.
+
+The dataset used for this study is relatively small. Collecting and analyzing more data points could improve the model's application to a larger variety of data. A larger dataset might also offset the influence of outliers, creating a more reliable fit.
+
+Additional variables could also be measured and evaluated for their dependency such as response time, building materials, and presence of fire handling systems. By evaluating additional variables, we would get a more well-rounded view of what factors play the biggest role in fire damage. This could help answer questions to create more predictive solutions to fire damage, benefitting fire insurnace companies and homeowners.
+
+# References
